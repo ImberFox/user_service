@@ -7,8 +7,8 @@
 default: &default
   adapter: postgresql
   encoding: unicode
-  username: user_service
-  password: pass
+  #username: user_service
+  #password: pass
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
 
@@ -25,4 +25,6 @@ test:
 
 production:
   <<: *default
+  username: ruby-rails-sample
+  password: <%= ENV['RUBY-RAILS-SAMPLE_DATABASE_PASSWORD'] %>
   database: user_service_production
