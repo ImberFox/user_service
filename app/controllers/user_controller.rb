@@ -11,7 +11,7 @@ class UserController < ApplicationController
         if check_user_name != true
             return render :json => {:respMsg => check_user_name}, :status => 400
         end
-        
+
         begin
             @user = User.find_by_name(params[:userName])
             if @user == nil
@@ -19,15 +19,15 @@ class UserController < ApplicationController
                 return render :json => responseMessage, :status => 404
             end
         rescue
-            responseMessage = ResponseMessage.new("Database error")            
+            responseMessage = ResponseMessage.new("Database error")
             return render :json => responseMessage, :status => 500
         end
-        render :json => @user
-    end 
+        render :json => @user, :only => ['id', "avatar"]
+    end
 
     def is_parameter_valid(params, param_name, regexp)
         param = params[param_name]
-        if param == nil || param == "" 
+        if param == nil || param == ""
             return param_name + " is Empty"
         end
         if regexp
@@ -39,30 +39,30 @@ class UserController < ApplicationController
     end
 
     def create_user()
-        userName = params['userName']
         check_user_name = is_parameter_valid params, 'userName', nil
         if check_user_name != true
             return render :json => {:respMsg => check_user_name}, :status => 400
         end
 
         check_user_email = is_parameter_valid params, 'userEmail', /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
-        if check_user_email != true 
+        if check_user_email != true
             return render :json => {:respMsg => check_user_email}, :status => 400
         end
-        
-        check_user_password = is_parameter_valid params, 'userPassword', nil 
-        if check_user_password != true 
+
+        check_user_password = is_parameter_valid params, 'userPassword', nil
+        if check_user_password != true
             return render :json => {:respMsg => check_user_password}, :status => 400
         end
-        
-        @user = User.new(:name => userName, :email => userEmail, :password => userPassword, :avatar => params[:userAvatar])
+
+        @user = User.new(:name => params[:userName], :email => params[:userEmail],
+           :password => params[:userPassword], :avatar => params[:userAvatar])
         if @user.valid?
-            begin 
-                @user.save()                
-                responseMessage = ResponseMessage.new("Ok")            
+            begin
+                @user.save()
+                responseMessage = ResponseMessage.new("Ok")
                 return render :json => {:respMsg => "Ok"}, :status => 200
             rescue
-                responseMessage = ResponseMessage.new("Database error")            
+                responseMessage = ResponseMessage.new("Database error")
                 return render :json => responseMessage, :status => 500
             end
         else
