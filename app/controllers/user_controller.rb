@@ -77,6 +77,7 @@ class UserController < ApplicationController
     def index()
         @user = User.new(:name=>'joe', :email=>'em', :password=>'p')
         p user
+        
         render :json => @user
     end
 end
