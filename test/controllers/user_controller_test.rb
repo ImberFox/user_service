@@ -6,6 +6,7 @@ class UserControllerTest < ActionDispatch::IntegrationTest
   # end
 
   test "get user" do
-    post '/get_user/', params: { userName: 'abs' }
+
+    #get :get_user, params: { userName: 'abs' }
   end
 end

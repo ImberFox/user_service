@@ -1,0 +1,13 @@
+language: ruby
+rvm:
+  - "2.4.1"
+env:
+  - DB=psql
+script:
+  - RAILS_ENV=test bundle exec rake db:create
+  - RAILS_ENV=test bundle exec rake db:migrate --trace
+  - bundle exec rake db:test:prepare
+  - bundle exec rspec spec/
+# before_script:
+#   - mysql -e 'create database myapp_test'
+# bundler_args: --binstubs=./bundler_stubs
