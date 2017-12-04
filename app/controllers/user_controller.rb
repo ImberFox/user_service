@@ -1,11 +1,33 @@
 require 'responseMessage.rb'
 
 class UserController < ApplicationController
-    attr_accessor :user
-    # skip_before_filter :verify_authenticity_token, :only => :create
-    # protect_from_forgery with: :null_session
+    attr_accessor :user, :important_params
+    def init_params()
+      @important_params = ['userName', 'userEmail', 'userPassword']
+    end
 
-    def get_user()
+
+    def is_parameter_valid(param_name, param, regexp = nil)
+      if param == nil || param == ""
+          return param_name + " is Empty"
+      end
+      if regexp
+          if !regexp.match? param
+              return param_name + " is invalid"
+          end
+      end
+      true
+    end
+
+    def fill_user
+      item = {}
+      item['userName'] = @user[:name]
+      item['userId'] = @user[:id]
+      item['avatar'] = @user[:avatar]
+      item
+    end
+
+    def get_user_by_name()
         userName = params['userName']
         check_user_name = is_parameter_valid 'userName', userName, nil
         if check_user_name != true
@@ -22,27 +44,41 @@ class UserController < ApplicationController
             responseMessage = ResponseMessage.new("Database error")
             return render :json => responseMessage, :status => 500
         end
-        render :json => @user, :only => ['id', "avatar"]
+
+        user = fill_user
+        render :json => {'respMsg': 'Ok', 'user': user}
     end
 
-    def is_parameter_valid(param_name, param, regexp = nil)
-      if param == nil || param == ""
-          return param_name + " is Empty"
-      end
-      if regexp
-          if !regexp.match? param
-              return param_name + " is invalid"
-          end
-      end
-      true
+
+    def get_user_by_id()
+        id = params[:id]
+        check_id = is_parameter_valid 'id', id, /^\d+$/
+        if check_id != true
+            return render :json => {:respMsg => check_id}, :status => 400
+        end
+
+        begin
+            @user = User.find_by_id(id)
+            if @user == nil
+                responseMessage = ResponseMessage.new("No such user")
+                return render :json => responseMessage, :status => 404
+            end
+        rescue
+            responseMessage = ResponseMessage.new("Database error")
+            return render :json => responseMessage, :status => 500
+        end
+
+        user = fill_user
+        render :json => {'respMsg': 'Ok', 'user': user}
     end
 
     def create_user()
-      params.each do |key, value|
+      init_params
+      @important_params.each do |key|
         if key == "userEmail"
-          check = is_parameter_valid key, value, /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
+          check = is_parameter_valid key, params[key], /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
         else
-          check = is_parameter_valid key, value
+          check = is_parameter_valid key, params[key]
         end
         if check != true
           return render :json => {:respMsg => check}, :status => 400
@@ -55,17 +91,17 @@ class UserController < ApplicationController
           begin
             @user.save()
             responseMessage = ResponseMessage.new("Ok")
-            return render :json => {:respMsg => "Ok"}, :status => 200
+            return render :json => {:respMsg => "Ok"}, :status => 201
           rescue
               responseMessage = ResponseMessage.new("Database error")
               return render :json => responseMessage, :status => 500
           end
       else
-          message = String.new
-          @user.errors.each do |attr, error|
-              message += "user".capitalize + " " + attr.to_s + " " + error.to_s + " "
-          end
-          return render :json => {:respMsg => message}, status: 409
+        if @user.errors.messages[:name].size > 0
+          return render :json => {:respMsg => "userName already occupied"}, status: 409
+        else
+          return render :json => {:respMsg => "userEmail already exist"}, status: 409
+        end
       end
     end
 
@@ -75,8 +111,9 @@ class UserController < ApplicationController
 
     def index()
         @user = User.new(:name=>'joe', :email=>'em', :password=>'p')
-        p user
-
         render :json => @user
     end
 end
+
+# skip_before_filter :verify_authenticity_token, :only => :create
+# protect_from_forgery with: :null_session
