@@ -88,14 +88,14 @@ class UserController < ApplicationController
       @user = User.new(:name => params[:userName], :email => params[:userEmail],
          :password => params[:userPassword], :avatar => params[:userAvatar])
       if @user.valid?
-          begin
-            @user.save()
-            responseMessage = ResponseMessage.new("Ok")
-            return render :json => {:respMsg => "Ok"}, :status => 201
-          rescue
-              responseMessage = ResponseMessage.new("Database error")
-              return render :json => responseMessage, :status => 500
-          end
+      begin
+        @user.save()
+        responseMessage = ResponseMessage.new("Ok")
+        return render :json => {:respMsg => "Ok"}, :status => 201
+      rescue
+          responseMessage = ResponseMessage.new("Database error")
+          return render :json => responseMessage, :status => 500
+      end
       else
         if @user.errors.messages[:name].size > 0
           return render :json => {:respMsg => "userName already occupied"}, status: 409
