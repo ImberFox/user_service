@@ -2,9 +2,11 @@ require 'responseMessage.rb'
 
 class UserController < ApplicationController
     attr_accessor :user, :important_params
-    def init_params()
-      @important_params = ['userName', 'userEmail', 'userPassword']
-    end
+    @@important_params = ['userName', 'userEmail', 'userPassword']
+    @@hash_local_and_global = {'userId' => 'id', 'userName'=>'name', 'userEmail'=>'email',
+      'userPassword'=>'password', 'userAvatar'=>'avatar'}
+    @@int_regexp = /^\d+$/
+    @@email_regexp = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
 
 
     def is_parameter_valid(param_name, param, regexp = nil)
@@ -19,12 +21,21 @@ class UserController < ApplicationController
       true
     end
 
-    def fill_user
-      item = {}
-      item['userName'] = @user[:name]
-      item['userId'] = @user[:id]
-      item['avatar'] = @user[:avatar]
-      item
+    def get_request_user()
+      user = {}
+      temp = @user.slice(:id, :name, :password, :avatar)
+      temp.each do |key, value|
+        user[@@hash_local_and_global.key(key)] = value
+      end
+      user
+    end
+
+    def params_to_db_params(params)
+      db_params = {}
+      @@important_params.each do |key|
+        db_params[@@hash_local_and_global[key]] = params[key]
+      end
+      db_params
     end
 
     def get_user_by_name()
@@ -44,39 +55,35 @@ class UserController < ApplicationController
             responseMessage = ResponseMessage.new("Database error")
             return render :json => responseMessage, :status => 500
         end
-
-        user = fill_user
+        user = get_request_user
         render :json => {'respMsg': 'Ok', 'user': user}
     end
 
-
     def get_user_by_id()
         id = params[:id]
-        check_id = is_parameter_valid 'id', id, /^\d+$/
+        check_id = is_parameter_valid 'id', id, @@int_regexp
         if check_id != true
             return render :json => {:respMsg => check_id}, :status => 400
         end
 
         begin
-            @user = User.find_by_id(id)
-            if @user == nil
-                responseMessage = ResponseMessage.new("No such user")
-                return render :json => responseMessage, :status => 404
-            end
+          @user = User.find_by_id(id)
+          if @user == nil
+              responseMessage = ResponseMessage.new("No such user")
+              return render :json => responseMessage, :status => 404
+          end
         rescue
             responseMessage = ResponseMessage.new("Database error")
             return render :json => responseMessage, :status => 500
         end
-
-        user = fill_user
+        user = get_request_user
         render :json => {'respMsg': 'Ok', 'user': user}
     end
 
     def create_user()
-      init_params
-      @important_params.each do |key|
+      @@important_params.each do |key|
         if key == "userEmail"
-          check = is_parameter_valid key, params[key], /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
+          check = is_parameter_valid key, params[key], @@email_regexp
         else
           check = is_parameter_valid key, params[key]
         end
@@ -85,12 +92,10 @@ class UserController < ApplicationController
         end
       end
 
-      @user = User.new(:name => params[:userName], :email => params[:userEmail],
-         :password => params[:userPassword], :avatar => params[:userAvatar])
+      @user = User.new(params_to_db_params(params))
       if @user.valid?
       begin
         @user.save()
-        responseMessage = ResponseMessage.new("Ok")
         return render :json => {:respMsg => "Ok"}, :status => 201
       rescue
           responseMessage = ResponseMessage.new("Database error")
@@ -114,6 +119,3 @@ class UserController < ApplicationController
         render :json => @user
     end
 end
-
-# skip_before_filter :verify_authenticity_token, :only => :create
-# protect_from_forgery with: :null_session
