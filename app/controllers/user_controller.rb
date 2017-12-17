@@ -39,6 +39,8 @@ class UserController < ApplicationController
     end
 
     def get_user_by_name()
+        logger.debug "get_user_by_name #{params}"
+
         userName = params['userName']
         check_user_name = is_parameter_valid 'userName', userName, nil
         if check_user_name != true
@@ -60,6 +62,7 @@ class UserController < ApplicationController
     end
 
     def get_user_by_id()
+        logger.debug "get_user_by_id #{params}"
         id = params[:id]
         check_id = is_parameter_valid 'id', id, @@int_regexp
         if check_id != true
@@ -81,6 +84,7 @@ class UserController < ApplicationController
     end
 
     def create_user()
+      logger.debug "create_user #{params}"
       @@important_params.each do |key|
         if key == "userEmail"
           check = is_parameter_valid key, params[key], @@email_regexp
@@ -88,15 +92,18 @@ class UserController < ApplicationController
           check = is_parameter_valid key, params[key]
         end
         if check != true
+          # logger.debug(key + "is invalid")
           return render :json => {:respMsg => check}, :status => 400
         end
       end
+
+
 
       @user = User.new(params_to_db_params(params))
       if @user.valid?
       begin
         @user.save()
-        return render :json => {:respMsg => "Ok"}, :status => 201
+        return render :json => {:respMsg => "Ok", :data => @user.id}, :status => 201
       rescue
           responseMessage = ResponseMessage.new("Database error")
           return render :json => responseMessage, :status => 500
