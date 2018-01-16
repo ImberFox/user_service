@@ -3,6 +3,7 @@ require 'responseMessage.rb'
 class UserController < ApplicationController
     attr_accessor :user, :important_params
     @@important_params = ['userName', 'userEmail', 'userPassword']
+    @@all_params = ['userName', 'userEmail', 'userPassword', 'userAvatar']
     @@hash_local_and_global = {'userId' => 'id', 'userName'=>'name', 'userEmail'=>'email',
       'userPassword'=>'password', 'userAvatar'=>'avatar'}
     @@int_regexp = /^\d+$/
@@ -32,7 +33,7 @@ class UserController < ApplicationController
 
     def params_to_db_params(params)
       db_params = {}
-      @@important_params.each do |key|
+      @@all_params.each do |key|
         db_params[@@hash_local_and_global[key]] = params[key]
       end
       db_params
@@ -84,6 +85,7 @@ class UserController < ApplicationController
     end
 
     def create_user()
+
       logger.debug "create_user #{params}"
       @@important_params.each do |key|
         if key == "userEmail"
