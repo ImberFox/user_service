@@ -3,7 +3,6 @@ require 'bcrypt'
 class User < ApplicationRecord
     include ActiveModel::Validations
     include ActiveModel::Serializers::JSON
-    include BCrypt
     validates :name,
     :presence => {:message => "Name can't be empty." },
     :uniqueness => {:message => "Name already occupied."}
@@ -18,12 +17,6 @@ class User < ApplicationRecord
     validates :password,
     :presence => {:message => "Password can't be empty." }
 
-    # def password()
-    #   @password ||= Password.new(password_hash)
-    # end
-    #
-    # def password=(new_password)
-    #   @password = Password.create(new_password)
-    #   self.password_hash = @password
-    # end
+    # TODO add auth_tocken, refresh, time to user
+    # i think its generates when login
 end

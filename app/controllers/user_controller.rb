@@ -12,14 +12,56 @@ class UserController < ApplicationController
 
 
 
+    def check_token_valid(token)
+      # p token
+      if AccessApplication.exists?(:appSecret => token)
+        # p 'here'
+        data = AccessApplication.where(:appSecret => token).first
+        now = Time.now.to_i
+        # p now
+        created = data['created'].to_i
+        # p created
+        if now - created > data['life']
+          return false
+        end
+        return true
+
+      else
+        return false
+      end
+    end
+
+    def get_new_token()
+      appName = params['appId']
+      if appRec = AccessApplication.where(:appName => appName).first
+        token = SecureRandom.hex#SecureRandom.base64 #=> "6BbW0pxO0YENxn38HMUbcQ=="
+        created = Time.now
+        life = 60
+        appRec.update(:appSecret => token, :created => created, :life => life)
+        render :json => {:token => token}, status: 200
+      else
+        render :json => {:respMsg => "Cant uderstand service"}, :status => 401
+      end
+    end
+
     def login_get
+      if !check_token_valid params[:appSecret]
+        return render :json => {:respMsg => "Not authoeized"}, status: 401
+      end
       @user = User.new
       @err = Array.new()
-      render "user/login"
+      @redirect = params[:redirect_url]
+      p @redirect
+      render "user/login", :status => 200
     end
 
     def login_post
-      
+      # if !check_token_valid params[:appSecret]
+      #   return render :json => {:respMsg => "Not authoeized"}, status: 401
+      # end
+
+      redirect_to params[:redirect_url]
+      # render :json => {:msg => "Ok"}, status: 200
     end
 
     def add_password_sault(password)
@@ -56,6 +98,9 @@ class UserController < ApplicationController
     end
 
     def get_user_by_name()
+        if !check_token_valid params[:appSecret]
+          return render :json => {:respMsg => "Not authoeized"}, status: 401
+        end
         logger.debug "get_user_by_name #{params}"
 
         userName = params['userName']
@@ -79,6 +124,10 @@ class UserController < ApplicationController
     end
 
     def get_user_by_id()
+        if !check_token_valid params[:appSecret]
+          return render :json => {:respMsg => "Not authoeized"}, status: 401
+        end
+
         logger.debug "get_user_by_id #{params}"
         id = params[:id]
         check_id = is_parameter_valid 'id', id, @@int_regexp
@@ -102,6 +151,10 @@ class UserController < ApplicationController
 
 
     def create_user()
+      if !check_token_valid params[:appSecret]
+        return render :json => {:respMsg => "Not authoeized"}, status: 401
+      end
+      
       logger.debug "create_user #{params}"
       @@important_params.each do |key|
         if key == "userEmail"
