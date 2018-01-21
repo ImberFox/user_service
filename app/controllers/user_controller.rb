@@ -1,7 +1,8 @@
 require 'responseMessage.rb'
-
+require 'bcrypt'
 class UserController < ApplicationController
     attr_accessor :user, :important_params
+    @@sault = "fucking_sault"
     @@important_params = ['userName', 'userEmail', 'userPassword']
     @@all_params = ['userName', 'userEmail', 'userPassword', 'userAvatar']
     @@hash_local_and_global = {'userId' => 'id', 'userName'=>'name', 'userEmail'=>'email',
@@ -9,6 +10,21 @@ class UserController < ApplicationController
     @@int_regexp = /^\d+$/
     @@email_regexp = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
 
+
+
+    def login_get
+      @user = User.new
+      @err = Array.new()
+      render "user/login"
+    end
+
+    def login_post
+      
+    end
+
+    def add_password_sault(password)
+      return "#{@@sault}#{password}#{@@sault}"
+    end
 
     def is_parameter_valid(param_name, param, regexp = nil)
       if param == nil || param == ""
@@ -84,8 +100,8 @@ class UserController < ApplicationController
         render :json => {'respMsg': 'Ok', 'user': user}
     end
 
-    def create_user()
 
+    def create_user()
       logger.debug "create_user #{params}"
       @@important_params.each do |key|
         if key == "userEmail"
@@ -94,14 +110,14 @@ class UserController < ApplicationController
           check = is_parameter_valid key, params[key]
         end
         if check != true
-          # logger.debug(key + "is invalid")
           return render :json => {:respMsg => check}, :status => 400
         end
       end
 
+      db_params = params_to_db_params(params)
+      db_params['password'] = BCrypt::Password.create(add_password_sault(db_params['password']))
 
-
-      @user = User.new(params_to_db_params(params))
+      @user = User.new db_params
       if @user.valid?
       begin
         @user.save()
@@ -118,6 +134,41 @@ class UserController < ApplicationController
         end
       end
     end
+
+    #
+    # def create_user()
+    #   logger.debug "create_user #{params}"
+    #   @@important_params.each do |key|
+    #     if key == "userEmail"
+    #       check = is_parameter_valid key, params[key], @@email_regexp
+    #     else
+    #       check = is_parameter_valid key, params[key]
+    #     end
+    #     if check != true
+    #       # logger.debug(key + "is invalid")
+    #       return render :json => {:respMsg => check}, :status => 400
+    #     end
+    #   end
+
+
+    #
+    #   @user = User.new(params_to_db_params(params))
+    #   if @user.valid?
+    #   begin
+    #     @user.save()
+    #     return render :json => {:respMsg => "Ok", :data => @user.id}, :status => 201
+    #   rescue
+    #       responseMessage = ResponseMessage.new("Database error")
+    #       return render :json => responseMessage, :status => 500
+    #   end
+    #   else
+    #     if @user.errors.messages[:name].size > 0
+    #       return render :json => {:respMsg => "userName already occupied"}, status: 409
+    #     else
+    #       return render :json => {:respMsg => "userEmail already exist"}, status: 409
+    #     end
+    #   end
+    # end
 
     def status()
       render :json => {:respMsg => "alive"}, status: 200

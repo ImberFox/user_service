@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>UserService</title>
+    <title>Aggregator</title>
     <%= csrf_meta_tags %>
-
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
   </head>
 
-  <body>
+<body>
+  <header class="navbar navbar-inverse col-md-12">
+    <div class="cointainer-fluid col-md-12">
+      <%= link_to "Oauth login", :login_get, id: "logo", :class => "navbar-brand navbar-left" %>
+    </div>
+  </header>
+  <div class="cointainer-fluid">
     <%= yield %>
-  </body>
+  </div>
 </html>

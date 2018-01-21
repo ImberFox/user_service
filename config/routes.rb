@@ -5,4 +5,7 @@ Rails.application.routes.draw do
   get '/get_user_by_id/:id', to: 'user#get_user_by_id', :as => :get_user_by_id
   get '/get_user_by_name/:userName', to: 'user#get_user_by_name', :as => :get_user_by_name
   post '/create_user/', to: 'user#create_user', :as => :create_user
+
+  get '/login', to: 'user#login_get', :as => :login_get
+  post '/login', to: 'user#login_post', :as => :login_post
 end

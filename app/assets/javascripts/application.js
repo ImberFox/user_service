@@ -10,6 +10,16 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+
+//= require jquery3
+//= require popper
+//= require bootstrap-sprockets
+//= require notify
+//= require validator
+//= require delete_film
+
+//= require set_rating
+
 //= require rails-ujs
 //= require turbolinks
 //= require_tree .
