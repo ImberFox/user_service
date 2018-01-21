@@ -1,5 +1,7 @@
 require 'responseMessage.rb'
 require 'bcrypt'
+require 'securerandom'
+
 class UserController < ApplicationController
     attr_accessor :user, :important_params
     @@sault = "fucking_sault"
@@ -154,7 +156,7 @@ class UserController < ApplicationController
       if !check_token_valid params[:appSecret]
         return render :json => {:respMsg => "Not authoeized"}, status: 401
       end
-      
+
       logger.debug "create_user #{params}"
       @@important_params.each do |key|
         if key == "userEmail"
