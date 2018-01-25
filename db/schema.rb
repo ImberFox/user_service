@@ -10,10 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20171109141214) do
+ActiveRecord::Schema.define(version: 20180125092135) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "access_applications", force: :cascade do |t|
+    t.string "appName"
+    t.string "appSecret"
+    t.string "token"
+    t.integer "life"
+    t.datetime "created"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "users", force: :cascade do |t|
     t.string "name"
@@ -22,6 +32,10 @@ ActiveRecord::Schema.define(version: 20171109141214) do
     t.string "avatar"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "accessToken"
+    t.string "refreshToken"
+    t.datetime "created"
+    t.integer "life"
   end
 
 end
