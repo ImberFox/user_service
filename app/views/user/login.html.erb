@@ -16,7 +16,7 @@
   <% end %>
 
   <div class="col-md-4 col-md-offset-4" data toggle="validator">
-    <%= form_for @user, {:url => login_post_url(:redirect_url => @redirect), :html => {:class => "form-group", 'data-toggle' => "validator"}} do |f| %>
+    <%= form_for @user, {:url => login_post_url(:redirect_url => @redirect, :response_type=> @response_type, :client_id => @client_id, :client_secret => @client_secret), :html => {:class => "form-group", 'data-toggle' => "validator"}} do |f| %>
 
       <div class="form-group  field_input top_margin col-md-12">
         <%= f.label :name, "Name", class:  "col-md-3 control-label padding_label" %>
