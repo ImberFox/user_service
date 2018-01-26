@@ -13,11 +13,14 @@ class UserController < ApplicationController
     @@email_regexp = /\A([^@\s]+)@((?:[-a-z0-9]+\.)+[a-z]{2,})\Z/i
 
     def check_token_valid(token)
+      if token == nil
+        return false
+      end
       data = token.split(' ')
 
       appSecret = data[1]
       p data
-      if rec = AccessApplication.where(:appToken => appSecret).first#:appName => appId, :appSecret => appSecret).first
+      if rec = AccessApplication.where(:token => appSecret).first#:appName => appId, :appSecret => appSecret).first
         p rec
         now = Time.now.to_i
         created = rec['created'].to_i
@@ -55,6 +58,7 @@ class UserController < ApplicationController
       db_params
     end
 
+
     def get_request_user()
       user = {}
       temp = @user.slice(:id, :name, :password, :avatar)
@@ -64,6 +68,19 @@ class UserController < ApplicationController
       user
     end
 
+    def update_oauth_token()
+
+    end
+
+    def get_oauth_code()
+
+    end
+
+    def check_oauth_token()
+      if token == nil
+        return false
+      end
+    end
 
 ################################################
 ############ controllers
@@ -83,7 +100,7 @@ class UserController < ApplicationController
       token = SecureRandom.hex#SecureRandom.base64 #=> "6BbW0pxO0YENxn38HMUbcQ=="
       created = Time.now
       life = 60
-      appRec.update(:appToken => token, :created => created, :life => life)
+      appRec.update(:token => token, :created => created, :life => life)
       render :json => {:token => token}, :status => 200
     else
       render :json => {:respMsg => "Uncknown service"}, :status => 401
@@ -91,9 +108,16 @@ class UserController < ApplicationController
   end
 
   def login_get
-    if !check_token_valid params[:appSecret]
-      return render :json => {:respMsg => "Not authoeized"}, status: 401
-    end
+    # if (data = check_token_valid(request.headers['Authorization'])) == false
+    #   return render :json => {:respMsg => "Not authorized"}, status: 401
+    # else
+    #   if data == 'uncknown'
+    #     return render :json => {:respMsg => "Uncknown server"}, :status => 401
+    #   end
+    # end
+    # if !check_token_valid params[:appSecret]
+      # return render :json => {:respMsg => "Not authoeized"}, status: 401
+    # end
     @user = User.new
     @err = Array.new()
     @redirect = params[:redirect_url]
@@ -102,12 +126,28 @@ class UserController < ApplicationController
   end
 
   def login_post
-    # if !check_token_valid params[:appSecret]
-    #   return render :json => {:respMsg => "Not authoeized"}, status: 401
-    # end
+    @user = User.new
+    @err = Array.new()
 
-    redirect_to params[:redirect_url]
-    # render :json => {:msg => "Ok"}, status: 200
+    if rec = User.where(:name => params[:user][:name]).first
+      if BCrypt::Password.new(rec['password']) != add_password_sault(params[:user][:password])
+        @err.push('incorrect password')
+      end
+    else
+      @err.push('incorrect login')
+    end
+
+    @redirect = params[:redirect_url]
+
+    if @err.count != 0
+      return render "user/login"
+    end
+
+    p params[:redirect_url]
+    code = SecureRandom.hex
+    rec.update(:code => code)
+    redirect_url = @redirect + "?code=#{code}"
+    redirect_to redirect_url
   end
 
   def get_user_by_name()
@@ -193,7 +233,10 @@ class UserController < ApplicationController
     end
 
     db_params = params_to_db_params(params)
+    p db_params['password']
     db_params['password'] = BCrypt::Password.create(add_password_sault(db_params['password']))
+    p db_params['password']
+
 
     @user = User.new db_params
     if @user.valid?

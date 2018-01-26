@@ -16,7 +16,6 @@
   <% end %>
 
   <div class="col-md-4 col-md-offset-4" data toggle="validator">
-    <%= @redirect %>
     <%= form_for @user, {:url => login_post_url(:redirect_url => @redirect), :html => {:class => "form-group", 'data-toggle' => "validator"}} do |f| %>
 
       <div class="form-group  field_input top_margin col-md-12">

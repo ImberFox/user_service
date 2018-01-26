@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180125092135) do
+ActiveRecord::Schema.define(version: 20180126121540) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -36,6 +36,7 @@ ActiveRecord::Schema.define(version: 20180125092135) do
     t.string "refreshToken"
     t.datetime "created"
     t.integer "life"
+    t.string "code"
   end
 
 end
