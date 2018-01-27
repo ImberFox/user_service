@@ -17,7 +17,6 @@ class UserController < ApplicationController
         return false
       end
       data = token.split(' ')
-
       appSecret = data[1]
       p data
       if rec = AccessApplication.where(:token => appSecret).first#:appName => appId, :appSecret => appSecret).first
@@ -58,7 +57,6 @@ class UserController < ApplicationController
       db_params
     end
 
-
     def get_request_user()
       user = {}
       temp = @user.slice(:id, :name, :password, :avatar)
@@ -68,25 +66,73 @@ class UserController < ApplicationController
       user
     end
 
-    def update_oauth_token()
-
-    end
-
-    def get_oauth_code()
-
-    end
-
-    def check_oauth_token()
-      if token == nil
-        return false
-      end
-    end
-
 ################################################
 ############ controllers
 #############################################
 
+  def check_oauth_token()
+    token = params[:access_token]
+    if token == nil
+      return render :json => {:respMsg => "UNAUTHORIZED"}, :status => 401
+    end
+
+    if rec = User.where(:accessToken => token).first
+      p rec
+      now = Time.now.to_i
+      created = rec['created'].to_i
+      p now
+      p created
+      if now - created > rec['life']
+        return render :json => {:respMsg => 'unauthorized'}, :status => 401
+      end
+      return render :json => {:respMsg => 'Ok'}, :status => 200
+    end
+    render :json => {:respMsg => 'UNAUTHORized'}, :status => 401
+  end
+
+  def update_oauth_token()
+    token = params[:refresh_token]
+    p token
+    if token == nil
+      return render :json => {:respMsg => "UNAUTHORIZED"}, :status => 401
+    end
+
+    if rec = User.where(:refreshToken => token).first
+      access_token = SecureRandom.hex
+      refresh_token = SecureRandom.hex
+
+      rec.update(:accessToken => access_token, :refreshToken => refresh_token,
+                 :life => 60, :created => Time.now)
+
+      return render :json => {:tokens => {:access_token => access_token,
+                                          :refresh_token => refresh_token}},
+                                          :status => 200
+    end
+  end
+
+  def get_user_by_token()
+    p params
+    token = params[:access_token]
+    p token
+    if rec = User.where(:accessToken => token).first
+      return render :json => {:user => {
+                              :userId => rec['id'],
+                              :userName => rec['name'],
+                              :userEmail => rec['email'],
+                              :userAvatar => rec['avatar']
+                              }}
+    end
+    return render :json => {:respMsg => "unauthorized"}, :status => 401
+  end
+
   def get_oauth_tokens()
+    if (data = check_token_valid(request.headers['Authorization'])) == false
+      return render :json => {:respMsg => "Not authorized"}, status: 401
+    else
+      if data == 'uncknown'
+        return render :json => {:respMsg => "Uncknown server"}, :status => 401
+      end
+    end
     code = params['code']
     if code == nil
       return render :json => {:respMsg => "Invalid code"}, :status => 401
@@ -96,7 +142,8 @@ class UserController < ApplicationController
       acc_token = SecureRandom.hex
       ref_token = SecureRandom.hex
 
-      rec.update(:accessToken => acc_token, :refreshToken => ref_token)
+      rec.update(:accessToken => acc_token, :refreshToken => ref_token,
+          :life => 60, :created => Time.now)
       return render :json => {:tokens => {:access_token => acc_token,
                                           :refresh_token => ref_token}},
                                           :status => 200

@@ -10,6 +10,10 @@ Rails.application.routes.draw do
   post '/login', to: 'user#login_post', :as => :login_post
 
   post 'get_token', to: 'user#get_new_token'
-  post 'get_oauth_tokens', to: 'user#get_oauth_tokens'
+
+  post '/update_tokens', to: 'user#update_oauth_token'
+  post '/check_token', to: 'user#check_oauth_token'
+  post '/get_oauth_tokens', to: 'user#get_oauth_tokens'
+  post '/get_user_by_token', to: 'user#get_user_by_token'
   # get '/authorize', to: 'user#login'
 end
