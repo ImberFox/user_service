@@ -108,6 +108,8 @@ class UserController < ApplicationController
                                           :refresh_token => refresh_token}},
                                           :status => 200
     end
+    return render :json => {:respMsg => "UNAUTHORIZEDs"}, :status => 401
+
   end
 
   def get_user_by_token()
@@ -120,7 +122,7 @@ class UserController < ApplicationController
                               :userName => rec['name'],
                               :userEmail => rec['email'],
                               :userAvatar => rec['avatar']
-                              }}
+                              }}, :status => 200
     end
     return render :json => {:respMsg => "unauthorized"}, :status => 401
   end
@@ -219,6 +221,28 @@ class UserController < ApplicationController
     redirect_url = @redirect + "?code=#{code}"
     redirect_to redirect_url
   end
+
+  def login
+    name = params[:userName]
+    password = params[:userPassword]
+    if rec = User.where(:name => name).first
+      if BCrypt::Password.new(rec['password']) != add_password_sault(password)
+        return render :json => {respMsg => 'Incorrect password'}, :status =>404
+        #@err.push('incorrect password')
+      end
+    else
+      return render :json => {:respMsg =>'incorrect login'}, :status => 404
+    end
+
+    token_access = SecureRandom.hex
+    token_refresh = SecureRandom.hex
+
+    rec.update(:accessToken => token_access, :refreshToken => token_refresh,
+        :life => 60, :created => Time.now)
+    return render :json => {:tokens => {:access_token => token_access,
+                                      :refresh_token => token_refresh}}
+  end
+
 
   def get_user_by_name()
     if (data = check_token_valid(request.headers['Authorization'])) == false

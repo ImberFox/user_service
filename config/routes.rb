@@ -8,6 +8,7 @@ Rails.application.routes.draw do
 
   get '/login', to: 'user#login_get', :as => :login_get
   post '/login', to: 'user#login_post', :as => :login_post
+  post 'login_ui', to: 'user#login', :as => :login_ui
 
   post 'get_token', to: 'user#get_new_token'
 
