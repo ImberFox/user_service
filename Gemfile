@@ -37,7 +37,6 @@ gem 'popper_js', '~> 1.12.9'
 
 gem 'rspec'
 
-gem 'pg'
 # gem 'activerecord-postgresql-citext'
 
 # Use Capistrano for deployment
